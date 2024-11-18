@@ -1,4 +1,4 @@
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 1   
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 1   
 
 
 C51 COMPILER V8.05a, COMPILATION OF MODULE CBP_V2
@@ -8,806 +8,782 @@ COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE CBP_v2.c BROWSE DEBUG OBJECTEXTEND
 line level    source
 
    1          #include<reg51.h>
-   2          
-   3          #include<string.h>
+   2          #include<string.h>
+   3          #include<stdio.h>
    4          
-   5          #include<stdio.h>
+   5          #define lcdport P1
    6          
-   7          #define lcdport P1
+   7          #define PWM_Period 0xB7FE
    8          
-   9          #define PWM_Period 0xB7FE
-  10          
-  11          #define ON 1
-  12          
-  13          #define OFF 0
-  14          
-  15          sbit row1=P2^0;
-  16          
-  17          sbit row2=P2^1;
-  18          
-  19          sbit row3=P2^2;
-  20          
-  21          sbit row4=P2^3;
-  22          
-  23          sbit col1=P2^4;
-  24          
-  25          sbit col2=P2^5;
-  26          
-  27          sbit col3=P2^6;
+   9          #define ON 1
+  10          #define OFF 0
+  11          
+  12          sbit row1=P2^0;
+  13          
+  14          sbit row2=P2^1;
+  15          
+  16          sbit row3=P2^2;
+  17          
+  18          sbit row4=P2^3;
+  19          
+  20          sbit col1=P2^4;
+  21          
+  22          sbit col2=P2^5;
+  23          
+  24          sbit col3=P2^6;
+  25          
+  26          sbit col4=P2^7;
+  27          
   28          
-  29          sbit col4=P2^7;
+  29          sbit rs=P1^0;
   30          
-  31          
-  32          sbit rs=P1^0;
-  33          
-  34          sbit rw=P1^1;
+  31          sbit rw=P1^1;
+  32          
+  33          sbit en=P1^2;
+  34          
   35          
-  36          sbit en=P1^2;
+  36          sbit m1=P0^4;
   37          
-  38          
-  39          sbit m1=P0^4;
-  40          
-  41          sbit m2=P0^5;
-  42          
-  43          sbit buzzer=P0^2;
+  38          sbit buzzer=P0^2;
+  39          
+  40          unsigned int ON_Period, OFF_Period, DutyCycle;
+  41          
+  42          char i,rx_data[50];
+  43          
   44          
-  45          unsigned int ON_Period, OFF_Period, DutyCycle;
+  45          char rfid[13],ch=0;
   46          
-  47          char i,rx_data[50];
-  48          
+  47          
+  48          char pass[4];
   49          
-  50          char rfid[13],ch=0;
-  51          
-  52          
-  53          char pass[4];
-  54          
-  55          
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 2   
+  50          
+  51          void servo_delay(unsigned int count)
+  52          {
+  53   1          int i,j;
+  54   1          for(i=0; i<count; i++)
+  55   1                              for(j=0; j<112; j++);
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 2   
 
-  56          void servo_delay(unsigned int count)
-  57          {
-  58   1          int i,j;
-  59   1          for(i=0; i<count; i++)
-  60   1                              for(j=0; j<112; j++);
-  61   1      }
-  62          
-  63           void delay(int itime)
-  64          
-  65          {
-  66   1      
-  67   1          int i,j;
-  68   1      
-  69   1          for(i=0;i<itime;i++)
-  70   1      
-  71   1          for(j=0;j<1275;j++);
-  72   1      
-  73   1      }
-  74          
-  75          
-  76          void daten()
-  77          
-  78          {
-  79   1      
-  80   1          rs=1;
-  81   1      
-  82   1          rw=0;
-  83   1      
-  84   1          en=1;
-  85   1      
-  86   1          delay(5);
-  87   1      
-  88   1          en=0;
-  89   1      
-  90   1      }
-  91          
-  92          
-  93          void lcddata(unsigned char ch)
-  94          
-  95          {
-  96   1      
-  97   1          lcdport=ch & 0xf0;
-  98   1      
-  99   1          daten();
- 100   1      
- 101   1          lcdport=(ch<<4) & 0xf0;
- 102   1      
- 103   1          daten();
- 104   1      
- 105   1      }
- 106          
- 107          
- 108          
- 109          void cmden(void)
- 110          
- 111          {
- 112   1      
- 113   1          rs=0;
- 114   1      
- 115   1          en=1;
- 116   1      
- 117   1          delay(5);
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 3   
+  56   1      }
+  57          
+  58           void delay(int itime)
+  59          
+  60          {
+  61   1      
+  62   1          int i,j;
+  63   1      
+  64   1          for(i=0;i<itime;i++)
+  65   1      
+  66   1          for(j=0;j<1275;j++);
+  67   1      
+  68   1      }
+  69          
+  70          
+  71          void daten()
+  72          
+  73          {
+  74   1      
+  75   1          rs=1;
+  76   1      
+  77   1          rw=0;
+  78   1      
+  79   1          en=1;
+  80   1      
+  81   1          delay(5);
+  82   1      
+  83   1          en=0;
+  84   1      
+  85   1      }
+  86          
+  87          
+  88          void lcddata(unsigned char ch)
+  89          
+  90          {
+  91   1      
+  92   1          lcdport=ch & 0xf0;
+  93   1      
+  94   1          daten();
+  95   1      
+  96   1          lcdport=(ch<<4) & 0xf0;
+  97   1      
+  98   1          daten();
+  99   1      
+ 100   1      }
+ 101          
+ 102          
+ 103          
+ 104          void cmden(void)
+ 105          
+ 106          {
+ 107   1      
+ 108   1          rs=0;
+ 109   1      
+ 110   1          en=1;
+ 111   1      
+ 112   1          delay(5);
+ 113   1      
+ 114   1          en=0;
+ 115   1      
+ 116   1      }
+ 117          
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 3   
 
- 118   1      
- 119   1          en=0;
- 120   1      
- 121   1      }
- 122          
- 123          
- 124          void lcdcmd(unsigned char ch)
- 125          
- 126          {
- 127   1      
- 128   1          lcdport=ch & 0xf0;
- 129   1      
- 130   1          cmden();
- 131   1      
- 132   1          lcdport=(ch<<4) & 0xf0;
- 133   1      
- 134   1          cmden();
- 135   1      
- 136   1      }
- 137          
- 138          
- 139          void lcdstring(char *str)
- 140          
- 141          {
- 142   1      
- 143   1          while(*str)
- 144   1      
- 145   1          {
- 146   2      
- 147   2              lcddata(*str);
- 148   2      
- 149   2              str++;
- 150   2      
- 151   2          }
- 152   1      
- 153   1      }
- 154          
- 155          
- 156          void lcd_init(void)
- 157          
- 158          {
- 159   1      
- 160   1          lcdcmd(0x02);
- 161   1      
- 162   1          lcdcmd(0x28);
- 163   1      
- 164   1          lcdcmd(0x0e);
- 165   1      
- 166   1          lcdcmd(0x01);
- 167   1      
- 168   1      }
- 169          
- 170          
- 171          void uart_init()
- 172          
- 173          {
- 174   1      
- 175   1       TMOD=0x21;
- 176   1      
- 177   1       SCON=0x50;
- 178   1      
- 179   1       TH1=0xfd;
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 4   
+ 118          
+ 119          void lcdcmd(unsigned char ch)
+ 120          
+ 121          {
+ 122   1      
+ 123   1          lcdport=ch & 0xf0;
+ 124   1      
+ 125   1          cmden();
+ 126   1      
+ 127   1          lcdport=(ch<<4) & 0xf0;
+ 128   1      
+ 129   1          cmden();
+ 130   1      
+ 131   1      }
+ 132          
+ 133          
+ 134          void lcdstring(char *str)
+ 135          
+ 136          {
+ 137   1      
+ 138   1          while(*str)
+ 139   1      
+ 140   1          {
+ 141   2      
+ 142   2              lcddata(*str);
+ 143   2      
+ 144   2              str++;
+ 145   2      
+ 146   2          }
+ 147   1      
+ 148   1      }
+ 149          
+ 150          
+ 151          void lcd_init(void)
+ 152          
+ 153          {
+ 154   1      
+ 155   1          lcdcmd(0x02);
+ 156   1      
+ 157   1          lcdcmd(0x28);
+ 158   1      
+ 159   1          lcdcmd(0x0e);
+ 160   1      
+ 161   1          lcdcmd(0x01);
+ 162   1      
+ 163   1      }
+ 164          
+ 165          
+ 166          void uart_init()
+ 167          
+ 168          {
+ 169   1      
+ 170   1       TMOD=0x21;
+ 171   1      
+ 172   1       SCON=0x50;
+ 173   1      
+ 174   1       TH1=0xfd;
+ 175   1      
+ 176   1       TR1=1;
+ 177   1       
+ 178   1       TH0 = (PWM_Period >> 8);/* 20ms timer value */
+ 179   1       
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 4   
 
- 180   1      
- 181   1       TR1=1;
- 182   1       
- 183   1       TH0 = (PWM_Period >> 8);/* 20ms timer value */
- 184   1       TL0 = PWM_Period;
- 185   1       TR0 = 1;               /* Start timer0 */
- 186   1      
- 187   1      }
- 188          
- 189          /* Timer0 interrupt service routine (ISR) */
- 190          void Timer0_ISR() interrupt 1   
- 191          {
- 192   1              m1 = !m1;
- 193   1              if(m1)
- 194   1              {
- 195   2                      TH0 = (ON_Period >> 8);
- 196   2                      TL0 = ON_Period;
- 197   2              }       
- 198   1              else
- 199   1              {
- 200   2                      TH0 = (OFF_Period >> 8);
- 201   2                      TL0 = OFF_Period;
- 202   2              }       
- 203   1                              
- 204   1      }
- 205          
- 206          /* Calculate ON & OFF period from duty cycle */
- 207          void Set_DutyCycle_To(float duty_cycle)
- 208          {
- 209   1              float period = 65535 - PWM_Period;
- 210   1              ON_Period = ((period/100.0) * duty_cycle);
- 211   1              OFF_Period = (period - ON_Period);      
- 212   1              ON_Period = 65535 - ON_Period;  
- 213   1              OFF_Period = 65535 - OFF_Period;
- 214   1      }
- 215          
- 216          char rxdata()
- 217          
- 218          {
- 219   1      
- 220   1        while(!RI);
- 221   1      
- 222   1          ch=SBUF;    
- 223   1      
- 224   1          RI=0;
- 225   1      
- 226   1          return ch;
- 227   1      
- 228   1      }
+ 180   1       TL0 = PWM_Period;
+ 181   1       
+ 182   1       TR0 = 1;               /* Start timer0 */
+ 183   1      
+ 184   1      }
+ 185          
+ 186          /* Timer0 interrupt service routine (ISR) */
+ 187          void Timer0_ISR() interrupt 1   
+ 188          {
+ 189   1              m1 = !m1;
+ 190   1              if(m1)
+ 191   1              {
+ 192   2                      TH0 = (ON_Period >> 8);
+ 193   2                      TL0 = ON_Period;
+ 194   2              }       
+ 195   1              else
+ 196   1              {
+ 197   2                      TH0 = (OFF_Period >> 8);
+ 198   2                      TL0 = OFF_Period;
+ 199   2              }       
+ 200   1                              
+ 201   1      }
+ 202          
+ 203          /* Calculate ON & OFF period from duty cycle */
+ 204          void Set_DutyCycle_To(float duty_cycle)
+ 205          {
+ 206   1              float period = 65535 - PWM_Period;
+ 207   1              ON_Period = ((period/100.0) * duty_cycle);
+ 208   1              OFF_Period = (period - ON_Period);      
+ 209   1              ON_Period = 65535 - ON_Period;  
+ 210   1              OFF_Period = 65535 - OFF_Period;
+ 211   1      }
+ 212          
+ 213          char rxdata()
+ 214          
+ 215          {
+ 216   1      
+ 217   1        while(!RI);
+ 218   1      
+ 219   1          ch=SBUF;    
+ 220   1      
+ 221   1          RI=0;
+ 222   1      
+ 223   1          return ch;
+ 224   1      
+ 225   1      }
+ 226          
+ 227          
+ 228          void keypad()
  229          
- 230          
- 231          void keypad()
- 232          
- 233          {
- 234   1      
- 235   1          lcdcmd(1);
- 236   1      
- 237   1          lcdstring("Enter Ur Passkey");
- 238   1      
- 239   1          lcdcmd(0xc0);
- 240   1      
- 241   1          i=0;
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 5   
+ 230          {
+ 231   1      
+ 232   1              lcdcmd(1);
+ 233   1      
+ 234   1          lcdstring("Enter Ur Passkey");
+ 235   1      
+ 236   1          lcdcmd(0xc0);
+ 237   1      
+ 238   1          i=0;
+ 239   1      
+ 240   1          while(i<4)
+ 241   1      
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 5   
 
- 242   1      
- 243   1          while(i<4)
- 244   1      
- 245   1          {
- 246   2      
- 247   2           col1=0;
- 248   2      
- 249   2           col2=col3=col4=1;
- 250   2      
- 251   2           if(!row1)
- 252   2      
- 253   2           {
- 254   3      
- 255   3              lcddata('1');
- 256   3      
- 257   3                      delay(100);
- 258   3      
- 259   3              pass[i++]='1';
- 260   3      
- 261   3              while(!row1);
- 262   3      
- 263   3         }
- 264   2      
- 265   2           
- 266   2      
- 267   2            else if(!row2)
- 268   2      
- 269   2           {
- 270   3      
- 271   3              lcddata('4');
- 272   3      
- 273   3                      delay(100);
- 274   3      
- 275   3              pass[i++]='4';
- 276   3      
- 277   3              while(!row2);
- 278   3      
- 279   3         }
- 280   2      
- 281   2           
- 282   2      
- 283   2            else if(!row3)
- 284   2      
- 285   2           {
- 286   3      
- 287   3              lcddata('7');
- 288   3      
- 289   3                      delay(100);
- 290   3      
- 291   3              pass[i++]='7';
- 292   3      
- 293   3              while(!row3);
- 294   3      
- 295   3         }
- 296   2      
- 297   2           
- 298   2      
- 299   2            else if(!row4)
- 300   2      
- 301   2           {
- 302   3      
- 303   3              lcddata('*');
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 6   
+ 242   1          {
+ 243   2      
+ 244   2                      col1=0;
+ 245   2              
+ 246   2                  col2=col3=col4=1;
+ 247   2              
+ 248   2                  if(!row1)
+ 249   2              
+ 250   2                  {
+ 251   3              
+ 252   3                      lcddata('1');
+ 253   3              
+ 254   3                              delay(100);
+ 255   3              
+ 256   3                      pass[i++]='1';
+ 257   3              
+ 258   3                      while(!row1);
+ 259   3              
+ 260   3                      }
+ 261   2              
+ 262   2                   
+ 263   2              
+ 264   2                  else if(!row2)
+ 265   2              
+ 266   2                  {
+ 267   3              
+ 268   3                      lcddata('4');
+ 269   3              
+ 270   3                              delay(100);
+ 271   3              
+ 272   3                      pass[i++]='4';
+ 273   3              
+ 274   3                      while(!row2);
+ 275   3              
+ 276   3                  }
+ 277   2              
+ 278   2                   
+ 279   2              
+ 280   2                  else if(!row3)
+ 281   2              
+ 282   2                  {
+ 283   3              
+ 284   3                      lcddata('7');
+ 285   3              
+ 286   3                              delay(100);
+ 287   3              
+ 288   3                      pass[i++]='7';
+ 289   3              
+ 290   3                      while(!row3);
+ 291   3              
+ 292   3                  }
+ 293   2              
+ 294   2                  else if(!row4)
+ 295   2              
+ 296   2                  {
+ 297   3              
+ 298   3                      lcddata('*');
+ 299   3              
+ 300   3                              delay(100);
+ 301   3              
+ 302   3                      pass[i++]='*';
+ 303   3              
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 6   
 
- 304   3      
- 305   3                      delay(100);
- 306   3      
- 307   3              pass[i++]='*';
- 308   3      
- 309   3              while(!row4);
- 310   3      
- 311   3         }
- 312   2      
- 313   2           
- 314   2      
- 315   2           col2=0;
- 316   2      
- 317   2           col1=col3=col4=1;
- 318   2      
- 319   2           if(!row1)
- 320   2      
- 321   2           {
- 322   3      
- 323   3              lcddata('2');
- 324   3      
- 325   3                      delay(100);
- 326   3      
- 327   3              pass[i++]='2';
- 328   3      
- 329   3              while(!row1);
- 330   3      
- 331   3         }
- 332   2      
- 333   2           
- 334   2      
- 335   2            else if(!row2)
- 336   2      
- 337   2           {
- 338   3      
- 339   3              lcddata('5');
- 340   3      
- 341   3                      delay(100);
- 342   3      
- 343   3              pass[i++]='5';
- 344   3      
- 345   3              while(!row2);
- 346   3      
- 347   3         }
- 348   2      
- 349   2           
- 350   2      
- 351   2            else if(!row3)
- 352   2      
- 353   2           {
- 354   3      
- 355   3              lcddata('8');
- 356   3      
- 357   3                      delay(100);
- 358   3      
- 359   3              pass[i++]='8';
- 360   3      
- 361   3              while(!row3);
- 362   3      
- 363   3         }
- 364   2      
- 365   2           
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 7   
+ 304   3                      while(!row4);
+ 305   3              
+ 306   3                  }
+ 307   2              
+ 308   2                   
+ 309   2              
+ 310   2                  col2=0;
+ 311   2              
+ 312   2                  col1=col3=col4=1;
+ 313   2              
+ 314   2                  if(!row1)
+ 315   2              
+ 316   2                  {
+ 317   3              
+ 318   3                      lcddata('2');
+ 319   3              
+ 320   3                              delay(100);
+ 321   3              
+ 322   3                      pass[i++]='2';
+ 323   3              
+ 324   3                      while(!row1);
+ 325   3              
+ 326   3                  }
+ 327   2              
+ 328   2                   
+ 329   2              
+ 330   2                  else if(!row2)
+ 331   2              
+ 332   2                  {
+ 333   3              
+ 334   3                      lcddata('5');
+ 335   3              
+ 336   3                              delay(100);
+ 337   3              
+ 338   3                      pass[i++]='5';
+ 339   3              
+ 340   3                      while(!row2);
+ 341   3              
+ 342   3                  } 
+ 343   2              
+ 344   2                   
+ 345   2              
+ 346   2                  else if(!row3)
+ 347   2              
+ 348   2                  {
+ 349   3              
+ 350   3                      lcddata('8');
+ 351   3              
+ 352   3                              delay(100);
+ 353   3              
+ 354   3                      pass[i++]='8';
+ 355   3              
+ 356   3                      while(!row3);
+ 357   3              
+ 358   3                  }
+ 359   2              
+ 360   2                   
+ 361   2              
+ 362   2                  else if(!row4)
+ 363   2              
+ 364   2                  {
+ 365   3              
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 7   
 
- 366   2      
- 367   2            else if(!row4)
- 368   2      
- 369   2           {
- 370   3      
- 371   3              lcddata('0');
- 372   3      
- 373   3                      delay(100);
- 374   3      
- 375   3              pass[i++]='0';
- 376   3      
- 377   3              while(!row4);
- 378   3      
- 379   3         }
- 380   2      
- 381   2           
- 382   2      
- 383   2           col3=0;
- 384   2      
- 385   2           col1=col2=col4=1;
- 386   2      
- 387   2           if(!row1)
- 388   2      
- 389   2           {
- 390   3      
- 391   3              lcddata('3');
- 392   3      
- 393   3                      delay(100);
- 394   3      
- 395   3              pass[i++]='3';
- 396   3      
- 397   3              while(!row1);
- 398   3      
- 399   3         }
- 400   2      
- 401   2           
- 402   2      
- 403   2            else if(!row2)
- 404   2      
- 405   2           {
- 406   3      
- 407   3              lcddata('6');
- 408   3      
- 409   3                      delay(100);
- 410   3      
- 411   3              pass[i++]='6';
- 412   3      
- 413   3              while(!row2);
- 414   3      
- 415   3         }
- 416   2      
- 417   2           
- 418   2      
- 419   2            else if(!row3)
- 420   2      
- 421   2           {
- 422   3      
- 423   3              lcddata('9');
- 424   3      
- 425   3                      delay(100);
- 426   3      
- 427   3              pass[i++]='9';
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 8   
+ 366   3                      lcddata('0');
+ 367   3              
+ 368   3                              delay(100);
+ 369   3              
+ 370   3                      pass[i++]='0';
+ 371   3              
+ 372   3                      while(!row4);
+ 373   3              
+ 374   3                  }
+ 375   2              
+ 376   2                   
+ 377   2              
+ 378   2                  col3=0;
+ 379   2              
+ 380   2                  col1=col2=col4=1;
+ 381   2              
+ 382   2                  if(!row1)
+ 383   2              
+ 384   2                  {
+ 385   3              
+ 386   3                      lcddata('3');
+ 387   3              
+ 388   3                              delay(100);
+ 389   3              
+ 390   3                      pass[i++]='3';
+ 391   3              
+ 392   3                      while(!row1);
+ 393   3              
+ 394   3                  }
+ 395   2              
+ 396   2                   
+ 397   2              
+ 398   2                  else if(!row2)
+ 399   2              
+ 400   2                  {
+ 401   3              
+ 402   3                      lcddata('6');
+ 403   3              
+ 404   3                              delay(100);
+ 405   3              
+ 406   3                      pass[i++]='6';
+ 407   3              
+ 408   3                      while(!row2);
+ 409   3              
+ 410   3                  }
+ 411   2              
+ 412   2                   
+ 413   2              
+ 414   2                  else if(!row3)
+ 415   2              
+ 416   2                  {
+ 417   3              
+ 418   3                      lcddata('9');
+ 419   3              
+ 420   3                              delay(100);
+ 421   3              
+ 422   3                      pass[i++]='9';
+ 423   3              
+ 424   3                      while(!row3);
+ 425   3              
+ 426   3                  }
+ 427   2              
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 8   
 
- 428   3      
- 429   3              while(!row3);
- 430   3      
- 431   3         }
- 432   2      
- 433   2           
- 434   2      
- 435   2            else if(!row4)
- 436   2      
- 437   2           {
- 438   3      
- 439   3              lcddata('#');
- 440   3      
- 441   3                      delay(100);
- 442   3      
- 443   3              pass[i++]='#';
- 444   3      
- 445   3              while(!row4);
- 446   3      
- 447   3         }
- 448   2      
- 449   2           
- 450   2      
- 451   2            col4=0;
- 452   2      
- 453   2           col1=col3=col2=1;
- 454   2      
- 455   2           if(!row1)
- 456   2      
- 457   2           {
- 458   3      
- 459   3              lcddata('A');
- 460   3      
- 461   3                      delay(100);
- 462   3      
- 463   3              pass[i++]='A';
- 464   3      
- 465   3              while(!row1);
- 466   3      
- 467   3         }
- 468   2      
- 469   2           
- 470   2      
- 471   2            else if(!row2)
- 472   2      
- 473   2           {
- 474   3      
- 475   3              lcddata('B');
- 476   3      
- 477   3                      delay(100);
- 478   3      
- 479   3              pass[i++]='B';
- 480   3      
- 481   3              while(!row2);
- 482   3      
- 483   3         }
- 484   2      
- 485   2           
- 486   2      
- 487   2            else if(!row3)
- 488   2      
- 489   2           {
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 9   
+ 428   2                   
+ 429   2              
+ 430   2                  else if(!row4)
+ 431   2              
+ 432   2                  {
+ 433   3              
+ 434   3                      lcddata('#');
+ 435   3              
+ 436   3                              delay(100);
+ 437   3              
+ 438   3                      pass[i++]='#';
+ 439   3              
+ 440   3                      while(!row4);
+ 441   3              
+ 442   3                  }
+ 443   2              
+ 444   2                   
+ 445   2              
+ 446   2                  col4=0;
+ 447   2              
+ 448   2                  col1=col3=col2=1;
+ 449   2              
+ 450   2                  if(!row1)
+ 451   2              
+ 452   2                  {
+ 453   3              
+ 454   3                      lcddata('A');
+ 455   3              
+ 456   3                              delay(100);
+ 457   3              
+ 458   3                      pass[i++]='A';
+ 459   3              
+ 460   3                      while(!row1);
+ 461   3              
+ 462   3                  }
+ 463   2              
+ 464   2                   
+ 465   2              
+ 466   2                  else if(!row2)
+ 467   2              
+ 468   2                  {
+ 469   3              
+ 470   3                      lcddata('B');
+ 471   3              
+ 472   3                              delay(100);
+ 473   3              
+ 474   3                      pass[i++]='B';
+ 475   3              
+ 476   3                      while(!row2);
+ 477   3              
+ 478   3                  }
+ 479   2              
+ 480   2                   
+ 481   2              
+ 482   2                  else if(!row3)
+ 483   2              
+ 484   2                  {
+ 485   3              
+ 486   3                      lcddata('C');
+ 487   3              
+ 488   3                              delay(100);
+ 489   3              
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 9   
 
- 490   3      
- 491   3              lcddata('C');
- 492   3      
- 493   3                      delay(100);
- 494   3      
- 495   3              pass[i++]='C';
- 496   3      
- 497   3              while(!row3);
- 498   3      
- 499   3         }
- 500   2      
- 501   2           
- 502   2      
- 503   2            else if(!row4)
- 504   2      
- 505   2           {
- 506   3      
- 507   3              lcddata('D');
- 508   3      
- 509   3                      delay(100);
- 510   3      
- 511   3              pass[i++]='D';
- 512   3      
- 513   3              while(!row4);
- 514   3      
- 515   3         }
- 516   2      
- 517   2       } 
+ 490   3                      pass[i++]='C';
+ 491   3              
+ 492   3                      while(!row3);
+ 493   3              
+ 494   3                  }
+ 495   2              
+ 496   2                   
+ 497   2              
+ 498   2                  else if(!row4)
+ 499   2              
+ 500   2                  {
+ 501   3              
+ 502   3                      lcddata('D');
+ 503   3              
+ 504   3                              delay(100);
+ 505   3              
+ 506   3                      pass[i++]='D';
+ 507   3              
+ 508   3                      while(!row4);
+ 509   3              
+ 510   3                  }
+ 511   2              } 
+ 512   1      }
+ 513          
+ 514          
+ 515          void accept()
+ 516          
+ 517          {
  518   1      
- 519   1           
+ 519   1          lcdcmd(1);
  520   1      
- 521   1      }
- 522          
- 523          
- 524          void accept()
- 525          
- 526          {
- 527   1      
- 528   1           lcdcmd(1);
- 529   1      
- 530   1           lcdstring("Welcome");
- 531   1      
- 532   1           lcdcmd(192);
- 533   1      
- 534   1           lcdstring("Password Accept");
+ 521   1          lcdstring("Welcome");
+ 522   1      
+ 523   1          lcdcmd(192);
+ 524   1      
+ 525   1          lcdstring("Password Accept");
+ 526   1      
+ 527   1          delay(200);
+ 528   1      
+ 529   1      }
+ 530          
+ 531          
+ 532          void wrong()
+ 533          
+ 534          {
  535   1      
- 536   1           delay(200);
+ 536   1              buzzer=ON;
  537   1      
- 538   1      }
- 539          
- 540          
- 541          void wrong()
- 542          
- 543          {
- 544   1      
- 545   1                buzzer=ON;
- 546   1      
- 547   1                      lcdcmd(1);
- 548   1      
- 549   1                      lcdstring("Wrong Passkey");
- 550   1      
- 551   1                      lcdcmd(192);
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 10  
+ 538   1          lcdcmd(1);
+ 539   1      
+ 540   1          lcdstring("Wrong Passkey");
+ 541   1      
+ 542   1          lcdcmd(192);
+ 543   1      
+ 544   1          lcdstring("PLZ Try Again");
+ 545   1      
+ 546   1          delay(200);
+ 547   1      
+ 548   1          buzzer=OFF;
+ 549   1      
+ 550   1      }
+ 551          
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 10  
 
- 552   1      
- 553   1                      lcdstring("PLZ Try Again");
- 554   1      
- 555   1                      delay(200);
- 556   1      
- 557   1                      buzzer=OFF;
- 558   1      
- 559   1      }
- 560          
- 561          
- 562          void main()
- 563          
- 564          {
- 565   1              EA  = 1;                /* Enable global interrupt */
- 566   1          ET0 = 1;            /* Enable timer0 interrupt */
- 567   1          
- 568   1              buzzer=0;
- 569   1      
- 570   1          uart_init();
- 571   1      
- 572   1          lcd_init();
- 573   1      
- 574   1          lcdstring("  RFID Based    ");
- 575   1      
- 576   1          lcdcmd(0xc0);
- 577   1      
- 578   1          lcdstring("Security system "); 
- 579   1      
- 580   1          delay(400);
- 581   1      
- 582   1          while(1)
- 583   1      
- 584   1          {
- 585   2      
- 586   2              lcdcmd(1);
- 587   2      
- 588   2              lcdstring("Place Your Card:");
- 589   2      
- 590   2              lcdcmd(0xc0);
- 591   2      
- 592   2              i=0;
- 593   2      
- 594   2              for(i=0;i<12;i++)
- 595   2      
- 596   2              rfid[i]=rxdata();
- 597   2      
- 598   2              rfid[i]='\0';
- 599   2      
- 600   2                      delay(200);
- 601   2      
- 602   2              lcdcmd(1);
- 603   2      
- 604   2              lcdstring("Your ID No. is:");
- 605   2      
- 606   2              lcdcmd(0xc0);
- 607   2      
- 608   2              for(i=0;i<12;i++)
- 609   2      
- 610   2              lcddata(rfid[i]);
- 611   2      
- 612   2              //delay(100);
- 613   2      
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 11  
+ 552          
+ 553          void main()
+ 554          
+ 555          {
+ 556   1              EA  = 1;                /* Enable global interrupt */
+ 557   1          ET0 = 1;            /* Enable timer0 interrupt */
+ 558   1          
+ 559   1              buzzer=0;
+ 560   1      
+ 561   1          uart_init();
+ 562   1      
+ 563   1          lcd_init();
+ 564   1      
+ 565   1          lcdstring("  RFID Based    ");
+ 566   1      
+ 567   1          lcdcmd(0xc0);
+ 568   1      
+ 569   1          lcdstring("Security system "); 
+ 570   1      
+ 571   1          delay(400);
+ 572   1      
+ 573   1          while(1)
+ 574   1      
+ 575   1          {
+ 576   2      
+ 577   2              lcdcmd(1);
+ 578   2      
+ 579   2              lcdstring("Place Your Card:");
+ 580   2      
+ 581   2              lcdcmd(0xc0);
+ 582   2      
+ 583   2              i=0;
+ 584   2      
+ 585   2              for(i=0;i<12;i++)
+ 586   2      
+ 587   2              rfid[i]=rxdata();
+ 588   2      
+ 589   2              rfid[i]='\0';
+ 590   2      
+ 591   2                      delay(200);
+ 592   2      
+ 593   2              lcdcmd(1);
+ 594   2      
+ 595   2              lcdstring("Your ID No. is:");
+ 596   2      
+ 597   2              lcdcmd(0xc0);
+ 598   2      
+ 599   2              for(i=0;i<12;i++)
+ 600   2      
+ 601   2              lcddata(rfid[i]);
+ 602   2      
+ 603   2              //delay(100);
+ 604   2      
+ 605   2              if(strncmp(rfid,"254006A1498B",12)==0)
+ 606   2      
+ 607   2              {
+ 608   3      
+ 609   3                  keypad();
+ 610   3      
+ 611   3                  if(strncmp(pass,"1704",4)==0)
+ 612   3      
+ 613   3                  {
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 11  
 
- 614   2              if(strncmp(rfid,"254006A1498B",12)==0)
- 615   2      
- 616   2              {
- 617   3      
- 618   3                  keypad();
- 619   3      
- 620   3                  if(strncmp(pass,"1704",4)==0)
- 621   3      
- 622   3                  {
- 623   4      
- 624   4                  accept();
- 625   4      
- 626   4                  lcdcmd(1);
- 627   4      
- 628   4                  lcdstring("Access Granted ");
- 629   4      
- 630   4                  lcdcmd(0xc0);
- 631   4      
- 632   4                  lcdstring("Aditya");
- 633   4      
- 634   4                  Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
- 635   4                              servo_delay(1000);
- 636   4                              //Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
- 637   4                              servo_delay(1000);
- 638   4                              Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
- 639   4                              servo_delay(1000);
- 640   4      
- 641   4                }
+ 614   4      
+ 615   4                          accept();
+ 616   4              
+ 617   4                          lcdcmd(1);
+ 618   4              
+ 619   4                          lcdstring("Access Granted ");
+ 620   4              
+ 621   4                          lcdcmd(0xc0);
+ 622   4              
+ 623   4                          lcdstring("Aditya");
+ 624   4              
+ 625   4                          Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+ 626   4              
+ 627   4                                      servo_delay(1000);
+ 628   4              
+ 629   4                                      //Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+ 630   4              
+ 631   4                                      servo_delay(1000);
+ 632   4              
+ 633   4                                      Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+ 634   4              
+ 635   4                                      servo_delay(1000);
+ 636   4      
+ 637   4                 }
+ 638   3      
+ 639   3                 else
+ 640   3      
+ 641   3                  wrong();
  642   3      
- 643   3                  else
- 644   3      
- 645   3                  wrong();
- 646   3      
- 647   3              }
+ 643   3              }
+ 644   2      
+ 645   2              
+ 646   2      
+ 647   2              else if(strncmp(rfid,"160066BD7AB7",12)==0)
  648   2      
- 649   2              
- 650   2      
- 651   2              else if(strncmp(rfid,"160066BD7AB7",12)==0)
- 652   2      
- 653   2                  {
+ 649   2              {
+ 650   3      
+ 651   3                  keypad();
+ 652   3      
+ 653   3                  if(strncmp(pass,"4202",4)==0)
  654   3      
- 655   3                  keypad();
- 656   3      
- 657   3                  if(strncmp(pass,"4202",4)==0)
- 658   3      
- 659   3                  {
- 660   4      
- 661   4                  accept();
- 662   4      
- 663   4                  lcdcmd(1);
- 664   4      
- 665   4                  lcdstring("Access Granted ");
- 666   4      
- 667   4                  lcdcmd(0xc0);
- 668   4      
- 669   4                  lcdstring("Person2");
- 670   4      
- 671   4                  m1=1;
- 672   4      
- 673   4                  m2=0;
- 674   4      
- 675   4                  delay(300);
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 12  
+ 655   3                  {
+ 656   4      
+ 657   4                          accept();
+ 658   4              
+ 659   4                          lcdcmd(1);
+ 660   4              
+ 661   4                          lcdstring("Access Granted ");
+ 662   4              
+ 663   4                          lcdcmd(0xc0);
+ 664   4              
+ 665   4                          lcdstring("Person2");
+ 666   4              
+ 667   4                          Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+ 668   4              
+ 669   4                                      servo_delay(1000);
+ 670   4              
+ 671   4                                      //Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+ 672   4              
+ 673   4                                      servo_delay(1000);
+ 674   4              
+ 675   4                                      Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 12  
 
- 676   4      
- 677   4                  m1=0;
+ 676   4              
+ 677   4                                      servo_delay(1000);
  678   4      
- 679   4                  m2=0;
- 680   4      
- 681   4                  delay(100);
- 682   4      
- 683   4                  m1=0;
- 684   4      
- 685   4                  m2=1;
- 686   4      
- 687   4                  delay(300);
- 688   4      
- 689   4                  m1=0;
- 690   4      
- 691   4                  m2=0;
- 692   4      
- 693   4                }
- 694   3      
- 695   3                  else
- 696   3      
- 697   3                  wrong();
- 698   3      
- 699   3            }
- 700   2      
- 701   2                  
- 702   2      
- 703   2                      else if(strncmp(rfid,"160066203060",12)==0)
- 704   2      
- 705   2                  {
- 706   3      
- 707   3          keypad();
- 708   3      
- 709   3                  if(strncmp(pass,"4203",4)==0)
- 710   3      
- 711   3                  {
- 712   4      
- 713   4                  accept();
- 714   4      
- 715   4                  lcdcmd(1);
- 716   4      
- 717   4                  lcdstring("Access Granted ");
- 718   4      
- 719   4                  lcdcmd(0xc0);
- 720   4      
- 721   4                  lcdstring("Person3");
- 722   4      
- 723   4                  m1=1;
- 724   4      
- 725   4                  m2=0;
- 726   4      
- 727   4                  delay(300);
- 728   4      
- 729   4                  m1=0;
- 730   4      
- 731   4                  m2=0;
- 732   4      
- 733   4                  delay(100);
- 734   4      
- 735   4                  m1=0;
- 736   4      
- 737   4                  m2=1;
-C51 COMPILER V8.05a   CBP_V2                                                               11/18/2024 23:00:32 PAGE 13  
+ 679   4                      }
+ 680   3      
+ 681   3                      else
+ 682   3      
+ 683   3                  wrong();
+ 684   3       
+ 685   3              }
+ 686   2      
+ 687   2                  
+ 688   2      
+ 689   2                  else if(strncmp(rfid,"160066203060",12)==0)
+ 690   2      
+ 691   2                  {
+ 692   3      
+ 693   3                              keypad();
+ 694   3              
+ 695   3                          if(strncmp(pass,"4203",4)==0)
+ 696   3              
+ 697   3                          {
+ 698   4              
+ 699   4                                  accept();
+ 700   4                      
+ 701   4                                  lcdcmd(1);
+ 702   4                      
+ 703   4                                  lcdstring("Access Granted ");
+ 704   4                      
+ 705   4                                  lcdcmd(0xc0);
+ 706   4                      
+ 707   4                                  lcdstring("Person3");
+ 708   4                      
+ 709   4                                  Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+ 710   4                      
+ 711   4                                              servo_delay(1000);
+ 712   4                      
+ 713   4                                              //Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+ 714   4                      
+ 715   4                                              servo_delay(1000);
+ 716   4                      
+ 717   4                                              Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+ 718   4                      
+ 719   4                                              servo_delay(1000);
+ 720   4              
+ 721   4                              }
+ 722   3              
+ 723   3                          else
+ 724   3              
+ 725   3                          wrong();
+ 726   3      
+ 727   3                      }
+ 728   2      
+ 729   2      
+ 730   2              else 
+ 731   2      
+ 732   2              {
+ 733   3      
+ 734   3                 lcdcmd(1);
+ 735   3      
+ 736   3                 lcdstring("Access Denied");
+ 737   3      
+C51 COMPILER V8.05a   CBP_V2                                                               11/19/2024 01:25:41 PAGE 13  
 
- 738   4      
- 739   4                  delay(300);
- 740   4      
- 741   4                  m1=0;
- 742   4      
- 743   4                  m2=0;
- 744   4      
- 745   4                }
- 746   3      
- 747   3                  else
- 748   3      
- 749   3                  wrong();
- 750   3      
- 751   3            }
- 752   2      
- 753   2      
- 754   2              else 
- 755   2      
- 756   2              {
- 757   3      
- 758   3                 lcdcmd(1);
- 759   3      
- 760   3                 lcdstring("Access Denied");
- 761   3      
- 762   3                 buzzer=ON;
- 763   3      
- 764   3                 delay(200);
- 765   3      
- 766   3                 buzzer=OFF;
- 767   3      
- 768   3              }
- 769   2      
- 770   2        }
- 771   1      
- 772   1      }
- 773          
+ 738   3                 buzzer=ON;
+ 739   3      
+ 740   3                 delay(200);
+ 741   3      
+ 742   3                 buzzer=OFF;
+ 743   3      
+ 744   3              }
+ 745   2      
+ 746   2        }
+ 747   1      
+ 748   1      }
+ 749          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1396    ----
+   CODE SIZE        =   1356    ----
    CONSTANT SIZE    =    243    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

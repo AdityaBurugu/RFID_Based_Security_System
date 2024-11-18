@@ -1,7 +1,5 @@
 #include<reg51.h>
-
 #include<string.h>
-
 #include<stdio.h>
 
 #define lcdport P1
@@ -9,36 +7,23 @@
 #define PWM_Period 0xB7FE
 
 #define ON 1
-
 #define OFF 0
 
 sbit row1=P2^0;
-
 sbit row2=P2^1;
-
 sbit row3=P2^2;
-
 sbit row4=P2^3;
 
 sbit col1=P2^4;
-
 sbit col2=P2^5;
-
 sbit col3=P2^6;
-
 sbit col4=P2^7;
 
-
 sbit rs=P1^0;
-
 sbit rw=P1^1;
-
 sbit en=P1^2;
 
-
 sbit m1=P0^4;
-
-sbit m2=P0^5;
 
 sbit buzzer=P0^2;
 
@@ -46,9 +31,7 @@ unsigned int ON_Period, OFF_Period, DutyCycle;
 
 char i,rx_data[50];
 
-
 char rfid[13],ch=0;
-
 
 char pass[4];
 
@@ -172,17 +155,19 @@ void uart_init()
 
 {
 
- TMOD=0x21;
-
- SCON=0x50;
-
- TH1=0xfd;
-
- TR1=1;
- 
- TH0 = (PWM_Period >> 8);/* 20ms timer value */
- TL0 = PWM_Period;
- TR0 = 1;		/* Start timer0 */
+	TMOD=0x21;
+	
+	SCON=0x50;
+	
+	TH1=0xfd;
+	
+	TR1=1;
+	
+	TH0 = (PWM_Period >> 8);/* 20ms timer value */
+	
+	TL0 = PWM_Period;
+	
+	TR0 = 1;		/* Start timer0 */
 
 }
 
@@ -207,9 +192,13 @@ void Timer0_ISR() interrupt 1
 void Set_DutyCycle_To(float duty_cycle)
 {
 	float period = 65535 - PWM_Period;
+	
 	ON_Period = ((period/100.0) * duty_cycle);
+	
 	OFF_Period = (period - ON_Period);	
+	
 	ON_Period = 65535 - ON_Period;	
+	
 	OFF_Period = 65535 - OFF_Period;
 }
 
@@ -232,7 +221,7 @@ void keypad()
 
 {
 
-    lcdcmd(1);
+	lcdcmd(1);
 
     lcdstring("Enter Ur Passkey");
 
@@ -244,280 +233,246 @@ void keypad()
 
     {
 
-     col1=0;
-
-     col2=col3=col4=1;
-
-     if(!row1)
-
-     {
-
-        lcddata('1');
-
-		delay(100);
-
-        pass[i++]='1';
-
-        while(!row1);
-
-   }
-
-     
-
-      else if(!row2)
-
-     {
-
-        lcddata('4');
-
-		delay(100);
-
-        pass[i++]='4';
-
-        while(!row2);
-
-   }
-
-     
-
-      else if(!row3)
-
-     {
-
-        lcddata('7');
-
-		delay(100);
-
-        pass[i++]='7';
-
-        while(!row3);
-
-   }
-
-     
-
-      else if(!row4)
-
-     {
-
-        lcddata('*');
-
-		delay(100);
-
-        pass[i++]='*';
-
-        while(!row4);
-
-   }
-
-     
-
-     col2=0;
-
-     col1=col3=col4=1;
-
-     if(!row1)
-
-     {
-
-        lcddata('2');
-
-		delay(100);
-
-        pass[i++]='2';
-
-        while(!row1);
-
-   }
-
-     
-
-      else if(!row2)
-
-     {
-
-        lcddata('5');
-
-		delay(100);
-
-        pass[i++]='5';
-
-        while(!row2);
-
-   }
-
-     
-
-      else if(!row3)
-
-     {
-
-        lcddata('8');
-
-		delay(100);
-
-        pass[i++]='8';
-
-        while(!row3);
-
-   }
-
-     
-
-      else if(!row4)
-
-     {
-
-        lcddata('0');
-
-		delay(100);
-
-        pass[i++]='0';
-
-        while(!row4);
-
-   }
-
-     
-
-     col3=0;
-
-     col1=col2=col4=1;
-
-     if(!row1)
-
-     {
-
-        lcddata('3');
-
-		delay(100);
-
-        pass[i++]='3';
-
-        while(!row1);
-
-   }
-
-     
-
-      else if(!row2)
-
-     {
-
-        lcddata('6');
-
-		delay(100);
-
-        pass[i++]='6';
-
-        while(!row2);
-
-   }
-
-     
-
-      else if(!row3)
-
-     {
-
-        lcddata('9');
-
-		delay(100);
-
-        pass[i++]='9';
-
-        while(!row3);
-
-   }
-
-     
-
-      else if(!row4)
-
-     {
-
-        lcddata('#');
-
-		delay(100);
-
-        pass[i++]='#';
-
-        while(!row4);
-
-   }
-
-     
-
-      col4=0;
-
-     col1=col3=col2=1;
-
-     if(!row1)
-
-     {
-
-        lcddata('A');
-
-		delay(100);
-
-        pass[i++]='A';
-
-        while(!row1);
-
-   }
-
-     
-
-      else if(!row2)
-
-     {
-
-        lcddata('B');
-
-		delay(100);
-
-        pass[i++]='B';
-
-        while(!row2);
-
-   }
-
-     
-
-      else if(!row3)
-
-     {
-
-        lcddata('C');
-
-		delay(100);
-
-        pass[i++]='C';
-
-        while(!row3);
-
-   }
-
-     
-
-      else if(!row4)
-
-     {
-
-        lcddata('D');
-
-		delay(100);
-
-        pass[i++]='D';
-
-        while(!row4);
-
-   }
-
- } 
-
-     
-
+		col1=0;
+	
+	    col2=col3=col4=1;
+	
+	    if(!row1)
+	
+	    {
+	
+	        lcddata('1');
+	
+			delay(100);
+	
+	        pass[i++]='1';
+	
+	        while(!row1);
+	
+		}
+	
+	    else if(!row2)
+	
+	    {
+	
+	        lcddata('4');
+	
+			delay(100);
+	
+	        pass[i++]='4';
+	
+	        while(!row2);
+	
+	    }
+	
+	    else if(!row3)
+	
+	    {
+	
+	        lcddata('7');
+	
+			delay(100);
+	
+	        pass[i++]='7';
+	
+	        while(!row3);
+	
+	    }
+	
+	    else if(!row4)
+	
+	    {
+	
+	        lcddata('*');
+	
+			delay(100);
+	
+	        pass[i++]='*';
+	
+	        while(!row4);
+	
+	    }
+	
+	    col2=0;
+	
+	    col1=col3=col4=1;
+	
+	    if(!row1)
+	
+	    {
+	
+	        lcddata('2');
+	
+			delay(100);
+	
+	        pass[i++]='2';
+	
+	        while(!row1);
+	
+	    }
+	
+	    else if(!row2)
+	
+	    {
+	
+	        lcddata('5');
+	
+			delay(100);
+	
+	        pass[i++]='5';
+	
+	        while(!row2);
+	
+	    } 
+	
+	    else if(!row3)
+	
+	    {
+	
+	        lcddata('8');
+	
+			delay(100);
+	
+	        pass[i++]='8';
+	
+	        while(!row3);
+	
+	    }
+	
+	    else if(!row4)
+	
+	    {
+	
+	        lcddata('0');
+	
+			delay(100);
+	
+	        pass[i++]='0';
+	
+	        while(!row4);
+	
+	    }
+	
+	    col3=0;
+	
+	    col1=col2=col4=1;
+	
+	    if(!row1)
+	
+	    {
+	
+	        lcddata('3');
+	
+			delay(100);
+	
+	        pass[i++]='3';
+	
+	        while(!row1);
+	
+	    }
+	
+	    else if(!row2)
+	
+	    {
+	
+	        lcddata('6');
+	
+			delay(100);
+	
+	        pass[i++]='6';
+	
+	        while(!row2);
+	
+	    }
+	
+	    else if(!row3)
+	
+	    {
+	
+	        lcddata('9');
+	
+			delay(100);
+	
+	        pass[i++]='9';
+	
+	        while(!row3);
+	
+	    }
+	
+	    else if(!row4)
+	
+	    {
+	
+	        lcddata('#');
+	
+			delay(100);
+	
+	        pass[i++]='#';
+	
+	        while(!row4);
+	
+	    }
+	
+	    col4=0;
+	
+	    col1=col3=col2=1;
+	
+	    if(!row1)
+	
+	    {
+	
+	        lcddata('A');
+	
+			delay(100);
+	
+	        pass[i++]='A';
+	
+	        while(!row1);
+	
+	    }
+	
+	    else if(!row2)
+	
+	    {
+	
+	        lcddata('B');
+	
+			delay(100);
+	
+	        pass[i++]='B';
+	
+	        while(!row2);
+	
+	    }
+	
+	    else if(!row3)
+	
+	    {
+	
+	        lcddata('C');
+	
+			delay(100);
+	
+	        pass[i++]='C';
+	
+	        while(!row3);
+	
+	    }  
+	
+	    else if(!row4)
+	
+	    {
+	
+	        lcddata('D');
+	
+			delay(100);
+	
+	        pass[i++]='D';
+	
+	        while(!row4);
+	
+	    }
+	} 
 }
 
 
@@ -525,15 +480,15 @@ void accept()
 
 {
 
-     lcdcmd(1);
+    lcdcmd(1);
 
-     lcdstring("Welcome");
+    lcdstring("Welcome");
 
-     lcdcmd(192);
+    lcdcmd(192);
 
-     lcdstring("Password Accept");
+    lcdstring("Password Accept");
 
-     delay(200);
+    delay(200);
 
 }
 
@@ -542,19 +497,19 @@ void wrong()
 
 {
 
-          buzzer=ON;
+	buzzer=ON;
 
-                lcdcmd(1);
+    lcdcmd(1);
 
-                lcdstring("Wrong Passkey");
+    lcdstring("Wrong Passkey");
 
-                lcdcmd(192);
+    lcdcmd(192);
 
-                lcdstring("PLZ Try Again");
+    lcdstring("PLZ Try Again");
 
-                delay(200);
+    delay(200);
 
-                buzzer=OFF;
+    buzzer=OFF;
 
 }
 
@@ -583,7 +538,7 @@ void main()
 
     {
 
-        lcdcmd(1);
+    	lcdcmd(1);
 
         lcdstring("Place Your Card:");
 
@@ -609,7 +564,7 @@ void main()
 
         lcddata(rfid[i]);
 
-        //delay(100);
+        delay(100);
 
         if(strncmp(rfid,"254006A1498B",12)==0)
 
@@ -621,36 +576,39 @@ void main()
 
             {
 
-            accept();
+	            accept();
+	
+	            lcdcmd(1);
+	
+	            lcdstring("Access Granted ");
+	
+	            lcdcmd(0xc0);
+	
+	            lcdstring("Aditya");
+	
+	            Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				//Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+	
+				servo_delay(1000);
 
-            lcdcmd(1);
+           }
 
-            lcdstring("Access Granted ");
-
-            lcdcmd(0xc0);
-
-            lcdstring("Aditya");
-
-            Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
-			servo_delay(1000);
-			//Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
-			servo_delay(1000);
-			Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
-			servo_delay(1000);
-
-          }
-
-            else
+           else
 
             wrong();
 
         }
 
-        
-
         else if(strncmp(rfid,"160066BD7AB7",12)==0)
 
-            {
+        {
 
             keypad();
 
@@ -658,97 +616,75 @@ void main()
 
             {
 
-            accept();
+	            accept();
+	
+	            lcdcmd(1);
+	
+	            lcdstring("Access Granted ");
+	
+	            lcdcmd(0xc0);
+	
+	            lcdstring("Person2");
+	
+	            Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				//Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+	
+				servo_delay(1000);
 
-            lcdcmd(1);
+        	}
 
-            lcdstring("Access Granted ");
-
-            lcdcmd(0xc0);
-
-            lcdstring("Person2");
-
-            m1=1;
-
-            m2=0;
-
-            delay(300);
-
-            m1=0;
-
-            m2=0;
-
-            delay(100);
-
-            m1=0;
-
-            m2=1;
-
-            delay(300);
-
-            m1=0;
-
-            m2=0;
-
-          }
-
-            else
+        	else
 
             wrong();
+ 
+        }   
 
-      }
+        else if(strncmp(rfid,"160066203060",12)==0)
 
-            
+        {
 
-                else if(strncmp(rfid,"160066203060",12)==0)
-
-            {
-
-    keypad();
+    		keypad();
 
             if(strncmp(pass,"4203",4)==0)
 
             {
 
-            accept();
+	            accept();
+	
+	            lcdcmd(1);
+	
+	            lcdstring("Access Granted ");
+	
+	            lcdcmd(0xc0);
+	
+	            lcdstring("Person3");
+	
+	            Set_DutyCycle_To(2.7);/* 0.54ms(2.7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				//Set_DutyCycle_To(9);/* 1.4ms(7%) of 20ms(100%) period */
+	
+				servo_delay(1000);
+	
+				Set_DutyCycle_To(12);/* 2.4ms(12%) of 20ms(100%) period */
+	
+				servo_delay(1000);
 
-            lcdcmd(1);
-
-            lcdstring("Access Granted ");
-
-            lcdcmd(0xc0);
-
-            lcdstring("Person3");
-
-            m1=1;
-
-            m2=0;
-
-            delay(300);
-
-            m1=0;
-
-            m2=0;
-
-            delay(100);
-
-            m1=0;
-
-            m2=1;
-
-            delay(300);
-
-            m1=0;
-
-            m2=0;
-
-          }
+          	}
 
             else
 
             wrong();
 
-      }
+    	}
 
 
         else 
@@ -767,7 +703,6 @@ void main()
 
         }
 
-  }
+	}
 
 }
-
